@@ -1,0 +1,15 @@
+
+services:
+  postgres_db:
+    image: postgres:15
+    container_name: kytucxa_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: kytucxa
+    ports:
+      - "5432:5432"
+    volumes:
+      # Lệnh này sẽ tự động chạy file init.sql khi DB được khởi tạo lần đầu
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped

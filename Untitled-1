@@ -1,0 +1,258 @@
+-- =========================================================================
+-- 1. TẠO CÁC BẢNG DANH MỤC & THỰC THỂ ĐỘC LẬP
+-- =========================================================================
+
+CREATE TABLE ChiNhanh (
+    MaChiNhanh VARCHAR(50) PRIMARY KEY,
+    TenChiNhanh VARCHAR(255) NOT NULL,
+    DiaChi TEXT
+);
+
+CREATE TABLE NhanVien (
+    MaNhanVien VARCHAR(50) PRIMARY KEY,
+    HoTen VARCHAR(255) NOT NULL,
+    VaiTro VARCHAR(100),
+    MaChiNhanh VARCHAR(50),
+    FOREIGN KEY (MaChiNhanh) REFERENCES ChiNhanh(MaChiNhanh)
+);
+
+-- Bảng kế thừa từ Nhân Viên
+CREATE TABLE NV_Sale (
+    MaNhanVien VARCHAR(50) PRIMARY KEY,
+    FOREIGN KEY (MaNhanVien) REFERENCES NhanVien(MaNhanVien)
+);
+
+CREATE TABLE QuanLy (
+    MaNhanVien VARCHAR(50) PRIMARY KEY,
+    FOREIGN KEY (MaNhanVien) REFERENCES NhanVien(MaNhanVien)
+);
+
+CREATE TABLE NV_KeToan (
+    MaNhanVien VARCHAR(50) PRIMARY KEY,
+    FOREIGN KEY (MaNhanVien) REFERENCES NhanVien(MaNhanVien)
+);
+
+CREATE TABLE NV_PhuTrach (
+    MaNhanVien VARCHAR(50) PRIMARY KEY,
+    FOREIGN KEY (MaNhanVien) REFERENCES NhanVien(MaNhanVien)
+);
+
+CREATE TABLE DichVu (
+    MaDichVu VARCHAR(50) PRIMARY KEY,
+    TenDichVu VARCHAR(255),
+    DonGia DECIMAL(15,2),
+    DonViTinh VARCHAR(50),
+    MaChiNhanh VARCHAR(50),
+    FOREIGN KEY (MaChiNhanh) REFERENCES ChiNhanh(MaChiNhanh)
+);
+
+CREATE TABLE KhachHang (
+    MaKhachHang VARCHAR(50) PRIMARY KEY,
+    HoTen VARCHAR(255),
+    Sdt VARCHAR(20),
+    CCCD VARCHAR(20),
+    GioiTinh VARCHAR(20),
+    Email VARCHAR(100)
+);
+
+CREATE TABLE DieuKienThue (
+    MaDieuKien VARCHAR(50) PRIMARY KEY,
+    TenDieuKien VARCHAR(255),
+    MoTa TEXT
+);
+
+CREATE TABLE LoaiThietBi (
+    MaLoaiThietBi VARCHAR(50) PRIMARY KEY,
+    TenLoaiThietBi VARCHAR(255),
+    GiaTriBoiThuong DECIMAL(15,2),
+    QuyDinhSuDung TEXT
+);
+
+-- =========================================================================
+-- 2. TẠO CÁC BẢNG LIÊN QUAN ĐẾN CƠ SỞ VẬT CHẤT (PHÒNG, GIƯỜNG, THIẾT BỊ)
+-- =========================================================================
+
+CREATE TABLE Phong (
+    MaPhong VARCHAR(50) PRIMARY KEY,
+    LoaiPhong VARCHAR(100),
+    SucChuaToiDa INT,
+    GiaThuePhong DECIMAL(15,2),
+    TrangThai VARCHAR(100),
+    KhuVuc VARCHAR(100),
+    GioiTinhApDung VARCHAR(50),
+    MaChiNhanh VARCHAR(50),
+    MaDieuKien VARCHAR(50),
+    FOREIGN KEY (MaChiNhanh) REFERENCES ChiNhanh(MaChiNhanh),
+    FOREIGN KEY (MaDieuKien) REFERENCES DieuKienThue(MaDieuKien)
+);
+
+CREATE TABLE Giuong (
+    MaGiuong VARCHAR(50) PRIMARY KEY, -- Giữ nguyên thiết kế nhưng bổ sung PK bắt buộc
+    GiaThueGiuong DECIMAL(15,2),
+    TrangThai VARCHAR(100),
+    MaPhong VARCHAR(50),
+    FOREIGN KEY (MaPhong) REFERENCES Phong(MaPhong)
+);
+
+-- =========================================================================
+-- 3. QUY TRÌNH 1 & 2: ĐĂNG KÝ VÀ ĐẶT CỌC
+-- =========================================================================
+
+CREATE TABLE PhieuDangKy (
+    MaPhieuDK VARCHAR(50) PRIMARY KEY,
+    SoNguoiDuKien INT,
+    NgayDuKienVao DATE,
+    TrangThai VARCHAR(100),
+    HinhThucThue VARCHAR(100),
+    NgayLap DATE,
+    KhuVucMongMuon VARCHAR(100),
+    MaKhachHang VARCHAR(50), -- Đại diện
+    MaNVSale VARCHAR(50),
+    FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang),
+    FOREIGN KEY (MaNVSale) REFERENCES NV_Sale(MaNhanVien)
+);
+
+-- Quan hệ M:N giữa PhieuDangKy và Phong
+CREATE TABLE PhieuDangKy_Phong (
+    MaPhieuDK VARCHAR(50),
+    MaPhong VARCHAR(50),
+    PRIMARY KEY (MaPhieuDK, MaPhong),
+    FOREIGN KEY (MaPhieuDK) REFERENCES PhieuDangKy(MaPhieuDK),
+    FOREIGN KEY (MaPhong) REFERENCES Phong(MaPhong)
+);
+
+CREATE TABLE ThongTinGD (
+    MaGiaoDich VARCHAR(50) PRIMARY KEY,
+    MaChungTu VARCHAR(100),
+    SoTienChuyen DECIMAL(15,2),
+    NoiDungTT TEXT,
+    ThoiGianTT TIMESTAMP,
+    PhuongThucTT VARCHAR(100),
+    MaKhachHang VARCHAR(50),
+    FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang)
+);
+
+CREATE TABLE HoaDonCoc (
+    MaHoaDon VARCHAR(50) PRIMARY KEY,
+    NgayLap DATE,
+    SoTienCoc DECIMAL(15,2),
+    "[HanThanhToan]" TIMESTAMP,    -- Tôn trọng ngoặc vuông
+    TrangThai VARCHAR(100),
+    ThoiGianCoc TIMESTAMP,
+    MaPhieuDK VARCHAR(50),
+    MaGiaoDich VARCHAR(50),
+    FOREIGN KEY (MaPhieuDK) REFERENCES PhieuDangKy(MaPhieuDK),
+    FOREIGN KEY (MaGiaoDich) REFERENCES ThongTinGD(MaGiaoDich)
+);
+
+-- =========================================================================
+-- 4. QUY TRÌNH 3: HỢP ĐỒNG VÀ BÀN GIAO
+-- =========================================================================
+
+CREATE TABLE HopDong (
+    MaHopDong VARCHAR(50) PRIMARY KEY,
+    "[Số phòng thuê]" INT,        -- Tôn trọng ngoặc vuông
+    "[Số giường thuê]" INT,       -- Tôn trọng ngoặc vuông
+    NgayNhanPhong DATE,
+    KyThanhToan VARCHAR(100),
+    TienBanGiao DECIMAL(15,2),
+    NgayLap DATE,
+    TrangThai VARCHAR(100),
+    MaKhachHang VARCHAR(50),
+    MaHoaDon VARCHAR(50),
+    FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang),
+    FOREIGN KEY (MaHoaDon) REFERENCES HoaDonCoc(MaHoaDon)
+);
+
+-- Quan hệ M:N giữa HopDong và DichVu
+CREATE TABLE HopDong_DichVu (
+    MaHopDong VARCHAR(50),
+    MaDichVu VARCHAR(50),
+    PRIMARY KEY (MaHopDong, MaDichVu),
+    FOREIGN KEY (MaHopDong) REFERENCES HopDong(MaHopDong),
+    FOREIGN KEY (MaDichVu) REFERENCES DichVu(MaDichVu)
+);
+
+-- Quan hệ M:N giữa HopDong và Giuong
+CREATE TABLE HopDong_Giuong (
+    MaHopDong VARCHAR(50),
+    MaGiuong VARCHAR(50),
+    PRIMARY KEY (MaHopDong, MaGiuong),
+    FOREIGN KEY (MaHopDong) REFERENCES HopDong(MaHopDong),
+    FOREIGN KEY (MaGiuong) REFERENCES Giuong(MaGiuong)
+);
+
+CREATE TABLE BienBanBanGiao (
+    MaBienBan VARCHAR(50) PRIMARY KEY,
+    NgayBanGiao DATE,
+    TrangThai VARCHAR(100),
+    MaHopDong VARCHAR(50),
+    MaQuanLy VARCHAR(50),
+    FOREIGN KEY (MaHopDong) REFERENCES HopDong(MaHopDong),
+    FOREIGN KEY (MaQuanLy) REFERENCES QuanLy(MaNhanVien)
+);
+
+CREATE TABLE TrangThietBi (
+    MaTrangThietBi VARCHAR(50) PRIMARY KEY,
+    TinhTrang VARCHAR(100),
+    MaLoaiThietBi VARCHAR(50),
+    MaPhong VARCHAR(50),
+    MaBienBanBanGiao VARCHAR(50),
+    FOREIGN KEY (MaLoaiThietBi) REFERENCES LoaiThietBi(MaLoaiThietBi),
+    FOREIGN KEY (MaPhong) REFERENCES Phong(MaPhong),
+    FOREIGN KEY (MaBienBanBanGiao) REFERENCES BienBanBanGiao(MaBienBan)
+);
+
+-- =========================================================================
+-- 5. QUY TRÌNH 4: TRẢ PHÒNG VÀ THANH TOÁN
+-- =========================================================================
+
+CREATE TABLE PhieuDangKyTra (
+    MaPhieuTra VARCHAR(50) PRIMARY KEY,
+    NgayLap DATE,
+    NgayDuKienTra DATE,
+    LyDo TEXT,
+    TrangThai VARCHAR(100),
+    MaHopDong VARCHAR(50),
+    FOREIGN KEY (MaHopDong) REFERENCES HopDong(MaHopDong)
+);
+
+CREATE TABLE PhieuKiemTra (
+    MaPhieuKT VARCHAR(50) PRIMARY KEY,
+    NgayLap DATE,
+    "[TyLeHoanCoBan]" DECIMAL(5,2), -- Tôn trọng ngoặc vuông
+    "[TienDu]" DECIMAL(15,2),       -- Tôn trọng ngoặc vuông
+    "[TienNo]" DECIMAL(15,2),       -- Tôn trọng ngoặc vuông
+    MaPhieuTra VARCHAR(50),
+    MaQuanLy VARCHAR(50),
+    FOREIGN KEY (MaPhieuTra) REFERENCES PhieuDangKyTra(MaPhieuTra),
+    FOREIGN KEY (MaQuanLy) REFERENCES QuanLy(MaNhanVien)
+);
+
+CREATE TABLE ChiTietKhauTru (
+    MaPhieuKT VARCHAR(50),
+    LoaiKhauTru VARCHAR(100),
+    SoTienPhaiTra DECIMAL(15,2),
+    MoTa TEXT,
+    PRIMARY KEY (MaPhieuKT, LoaiKhauTru), -- Composite Primary Key
+    FOREIGN KEY (MaPhieuKT) REFERENCES PhieuKiemTra(MaPhieuKT)
+);
+
+CREATE TABLE PhieuThanhToan (
+    MaPhieuTT VARCHAR(50) PRIMARY KEY,
+    NgayLap DATE,
+    "[TongTien]" DECIMAL(15,2),    -- Tôn trọng ngoặc vuông
+    HinhThuc VARCHAR(100),
+    TrangThai VARCHAR(100),
+    MaPhieuKT VARCHAR(50),
+    MaNVKeToan VARCHAR(50),
+    FOREIGN KEY (MaPhieuKT) REFERENCES PhieuKiemTra(MaPhieuKT),
+    FOREIGN KEY (MaNVKeToan) REFERENCES NV_KeToan(MaNhanVien)
+);
+
+CREATE TABLE BienBanTraPhong (
+    MaBienBan VARCHAR(50) PRIMARY KEY,
+    NgayLap DATE,
+    MaPhieuTT VARCHAR(50),
+    FOREIGN KEY (MaPhieuTT) REFERENCES PhieuThanhToan(MaPhieuTT)
+);
